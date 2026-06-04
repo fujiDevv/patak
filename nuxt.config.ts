@@ -8,7 +8,21 @@ if (typeof process !== 'undefined' && process.platform === 'darwin') {
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@vite-pwa/nuxt'],
+  modules: ['@nuxtjs/tailwindcss', '@vite-pwa/nuxt', 'shadcn-nuxt'],
+  shadcn: {
+    /**
+     * Prefix for all the imported component.
+     * @default "Ui"
+     */
+    prefix: '',
+    /**
+     * Directory that the component lives in.
+     * Will respect the Nuxt aliases.
+     * @link https://nuxt.com/docs/api/nuxt-config#alias
+     * @default "@/components/ui"
+     */
+    componentDir: '@/components/ui'
+  },
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
@@ -41,4 +55,3 @@ export default defineNuxtConfig({
     }
   }
 })
-

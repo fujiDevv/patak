@@ -225,87 +225,97 @@ onMounted(async () => {
         <!-- Search controls -->
         <div class="flex items-center gap-2 w-full md:w-auto">
           <div class="relative w-full md:w-80">
-            <input
+            <Input
               v-model="searchInput"
               @keyup.enter="triggerSearch"
-              type="text"
               list="existing-cities"
               placeholder="Search city (e.g. Quezon City)..."
-              class="bg-white border border-slate-200 text-sm focus:border-blue-900 focus:ring-blue-900/10 rounded-xl pl-10 pr-10 py-2.5 w-full transition focus:outline-none focus:ring-2 text-slate-900 placeholder-slate-400 shadow-sm"
+              class="pl-10 pr-10 py-2.5 w-full bg-white border border-slate-200 focus-visible:ring-blue-900/10 focus-visible:border-blue-900 text-slate-900 placeholder-slate-400 shadow-sm rounded-xl h-10"
             />
             <datalist id="existing-cities">
               <option v-for="city in existingCities" :key="city" :value="city" />
             </datalist>
             <span class="absolute left-3.5 top-3.5 text-slate-400 text-xs">🔍</span>
-            <button 
+            <Button 
               v-if="activeSearch" 
+              variant="ghost"
+              size="icon"
               @click="clearSearch" 
-              class="absolute right-3 top-2.5 w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 text-xs transition"
+              class="absolute right-2 top-2 w-6 h-6 rounded-full text-slate-500 hover:bg-slate-100 p-0 flex items-center justify-center"
             >
               ✕
-            </button>
+            </Button>
           </div>
-          <button 
+          <Button 
             @click="triggerSearch" 
-            class="bg-blue-900 text-white hover:bg-blue-800 font-medium px-5 py-2.5 text-sm rounded-xl shadow-sm transition duration-300"
+            class="bg-blue-900 text-white hover:bg-blue-850 font-medium px-5 py-2 text-sm rounded-xl shadow-sm h-10"
           >
             Find
-          </button>
+          </Button>
         </div>
       </div>
     </header>
 
     <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
       
-      <!-- Left column: Active outage list -->
-      <section class="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col gap-5 lg:h-[820px] lg:sticky lg:top-24">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 flex items-center gap-2">
+      <!-- Left column: Active outage list card -->
+      <Card class="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col gap-5 lg:h-[820px] lg:sticky lg:top-24 overflow-hidden p-0">
+        <CardHeader class="p-6 pb-4 border-b border-slate-100 flex flex-row items-center justify-between gap-3 space-y-0">
+          <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-blue-900 animate-pulse"></span>
-            Active Outages
-          </h2>
+            <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900">
+              Active Outages
+            </CardTitle>
+          </div>
 
           <!-- Type filter buttons -->
           <div class="flex bg-slate-50 border border-slate-200 p-0.5 rounded-xl text-xs shadow-sm">
-            <button 
+            <Button 
+              variant="ghost"
+              size="xs"
               @click="selectedType = 'ALL'"
-              :class="selectedType === 'ALL' ? 'bg-blue-900 text-white font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1.5 rounded-lg transition"
+              :class="selectedType === 'ALL' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
+              class="px-2.5 py-1 h-7 rounded-lg transition"
             >
               All
-            </button>
-            <button 
+            </Button>
+            <Button 
+              variant="ghost"
+              size="xs"
               @click="selectedType = 'POWER'"
-              :class="selectedType === 'POWER' ? 'bg-blue-900 text-white font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1.5 rounded-lg transition"
+              :class="selectedType === 'POWER' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
+              class="px-2.5 py-1 h-7 rounded-lg transition"
             >
               ⚡ Power
-            </button>
-            <button 
+            </Button>
+            <Button 
+              variant="ghost"
+              size="xs"
               @click="selectedType = 'WATER'"
-              :class="selectedType === 'WATER' ? 'bg-blue-900 text-white font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1.5 rounded-lg transition"
+              :class="selectedType === 'WATER' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
+              class="px-2.5 py-1 h-7 rounded-lg transition"
             >
               💧 Water
-            </button>
+            </Button>
           </div>
-        </div>
+        </CardHeader>
 
         <!-- Quick select city suggestion badges -->
-        <div v-if="existingCities.length" class="flex flex-wrap gap-1.5 items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+        <div v-if="existingCities.length" class="px-6 flex flex-wrap gap-1.5 items-center">
           <span class="text-[9px] uppercase font-bold text-slate-400 mr-1.5">Quick Select:</span>
-          <button
+          <Badge
             v-for="city in existingCities"
             :key="city"
             @click="searchInput = city; triggerSearch()"
-            class="text-[11px] px-2 py-0.5 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-md transition duration-200 flex items-center gap-1 shadow-sm font-medium"
+            variant="outline"
+            class="text-[11px] px-2.5 py-0.5 hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-lg cursor-pointer transition duration-200 flex items-center gap-1 shadow-sm font-medium"
           >
             📍 {{ city }}
-          </button>
+          </Badge>
         </div>
 
         <!-- Scrollable outage entries list -->
-        <div class="flex-1 overflow-y-auto pr-1 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <CardContent class="flex-1 overflow-y-auto pr-1 p-6 pt-0 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           <div v-if="pending" class="py-24 text-center my-auto">
             <div class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4"></div>
             <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
@@ -318,18 +328,19 @@ onMounted(async () => {
           </div>
 
           <template v-else>
-            <div
+            <Card
               v-for="item in outages"
               :key="item.id"
               @click="focusMunicipality(item.municipality)"
               class="p-5 bg-slate-50/20 hover:bg-slate-50 border border-slate-200/80 hover:border-blue-200 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md"
             >
               <div class="flex justify-between items-center mb-3">
-                <span 
+                <Badge 
+                  variant="secondary"
                   class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200"
                 >
                   {{ item.providerSlug }}
-                </span>
+                </Badge>
                 <div class="flex items-center gap-2">
                   <span class="text-slate-400 text-xs">🕒</span>
                   <span class="text-xs text-slate-500 font-medium">{{ item.durationHours }}h duration</span>
@@ -339,12 +350,12 @@ onMounted(async () => {
               <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-900 transition">{{ item.municipality }}</h3>
               
               <div class="flex gap-2 items-center mt-1 mb-3">
-                <span 
-                  :class="item.status === 'UNANNOUNCED' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                <Badge 
+                  :variant="item.status === 'UNANNOUNCED' ? 'destructive' : 'secondary'"
                   class="text-[10px] font-semibold px-2 py-0.5 rounded border"
                 >
                   {{ item.status }}
-                </span>
+                </Badge>
                 <span class="text-[10px] text-slate-500 font-medium">
                   {{ item.reasonCategory }}
                 </span>
@@ -369,82 +380,88 @@ onMounted(async () => {
 
               <!-- Fallback text snippet -->
               <p v-else class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">{{ item.rawText }}</p>
-            </div>
+            </Card>
           </template>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       <!-- Right column: Map and Reliability Leaderboard -->
       <section class="lg:col-span-7 flex flex-col gap-8">
         
         <!-- CartoDB Map Container -->
-        <div class="relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
-          <div class="px-5 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-            <span class="text-xs font-medium tracking-wide uppercase text-slate-900 flex items-center gap-2">
+        <Card class="relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col p-0">
+          <CardHeader class="px-5 py-3 border-b border-slate-200 flex flex-row items-center justify-between bg-slate-50 space-y-0">
+            <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 flex items-center gap-2">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-900"></span>
               Live Interruption Heatmap
-            </span>
-            <span class="text-[10px] text-slate-500">Leaflet + CartoDB Positron</span>
-          </div>
-          <div ref="mapElement" class="w-full h-[350px] z-10"></div>
-        </div>
+            </CardTitle>
+            <CardDescription class="text-[10px] text-slate-500">Leaflet + CartoDB Positron</CardDescription>
+          </CardHeader>
+          <CardContent class="p-0">
+            <div ref="mapElement" class="w-full h-[350px] z-10"></div>
+          </CardContent>
+        </Card>
 
         <!-- Municipal Reliability leaderboard -->
-        <div class="bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-5 shadow-sm">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <Card class="bg-white border border-slate-200 rounded-xl p-0 flex flex-col shadow-sm">
+          <CardHeader class="flex flex-row items-center justify-between border-b border-slate-100 p-6 pb-4 space-y-0">
             <div>
-              <h2 class="text-xs font-medium tracking-wide uppercase text-slate-900 mb-1">Municipal Reliability Index</h2>
-              <p class="text-[10px] text-slate-500">Ranked by SAIFI & SAIDI scoring coefficients</p>
+              <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 mb-1">Municipal Reliability Index</CardTitle>
+              <CardDescription class="text-[10px] text-slate-500">Ranked by SAIFI & SAIDI scoring coefficients</CardDescription>
             </div>
             
             <!-- Sorting toggle -->
-            <button 
+            <Button 
+              variant="outline"
+              size="sm"
               @click="sortAsc = !sortAsc"
-              class="text-xs bg-white border border-blue-200 text-blue-900 hover:bg-blue-50 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm font-medium"
+              class="text-xs border-blue-200 text-blue-900 hover:bg-blue-50 px-3 py-1 rounded-xl transition flex items-center gap-1.5 shadow-sm font-medium h-9"
             >
               <span>Sort:</span>
               <span class="font-bold text-blue-900">{{ sortAsc ? 'Worst First' : 'Best First' }}</span>
-            </button>
-          </div>
+            </Button>
+          </CardHeader>
 
-          <div v-if="leaderboard && leaderboard.length" class="flex flex-col gap-2 overflow-y-auto max-h-[300px] pr-1">
-            <div
-              v-for="(entry, i) in leaderboard"
-              :key="entry.municipality"
-              @click="focusMunicipality(entry.municipality)"
-              class="flex items-center gap-4 text-sm p-2.5 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-200/60 group"
-            >
-              <!-- Ranking index -->
-              <span class="text-slate-400 font-mono w-6 text-center text-xs group-hover:text-slate-600 transition">{{ sortAsc ? i + 1 : leaderboard.length - i }}</span>
-              
-              <!-- Municipality Name -->
-              <span class="flex-1 text-slate-700 font-semibold group-hover:text-slate-900 transition">{{ entry.municipality }}</span>
-              
-              <!-- Metrics stats -->
-              <div class="hidden sm:flex items-center gap-4 text-xs text-slate-500">
-                <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                  SAIFI <strong class="text-slate-800">{{ entry.saifiCount?.toFixed(2) }}</strong>
-                </span>
-                <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                  SAIDI <strong class="text-slate-800">{{ entry.saidiHours?.toFixed(1) }}h</strong>
-                </span>
-              </div>
-
-              <!-- Reliability Gauge Score -->
-              <span
-                class="text-xs font-mono font-bold px-3 py-1 rounded-full text-right"
-                :class="entry.reliabilityScore >= 95
-                  ? 'bg-blue-50 text-blue-900 border border-blue-200'
-                  : entry.reliabilityScore >= 90
-                    ? 'bg-slate-100 text-slate-700 border border-slate-200'
-                    : 'bg-red-50 text-red-700 border border-red-200'"
+          <CardContent class="p-6 pt-0">
+            <div v-if="leaderboard && leaderboard.length" class="flex flex-col gap-2 overflow-y-auto max-h-[300px] pr-1 mt-4">
+              <div
+                v-for="(entry, i) in leaderboard"
+                :key="entry.municipality"
+                @click="focusMunicipality(entry.municipality)"
+                class="flex items-center gap-4 text-sm p-2.5 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-200/60 group"
               >
-                {{ entry.reliabilityScore?.toFixed(1) }}%
-              </span>
+                <!-- Ranking index -->
+                <span class="text-slate-400 font-mono w-6 text-center text-xs group-hover:text-slate-600 transition">{{ sortAsc ? i + 1 : leaderboard.length - i }}</span>
+                
+                <!-- Municipality Name -->
+                <span class="flex-1 text-slate-700 font-semibold group-hover:text-slate-900 transition">{{ entry.municipality }}</span>
+                
+                <!-- Metrics stats -->
+                <div class="hidden sm:flex items-center gap-4 text-xs text-slate-500">
+                  <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
+                    SAIFI <strong class="text-slate-800">{{ entry.saifiCount?.toFixed(2) }}</strong>
+                  </span>
+                  <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
+                    SAIDI <strong class="text-slate-800">{{ entry.saidiHours?.toFixed(1) }}h</strong>
+                  </span>
+                </div>
+
+                <!-- Reliability Gauge Score -->
+                <Badge
+                  class="text-xs font-mono font-bold px-3 py-1 rounded-full text-right shadow-sm"
+                  :class="entry.reliabilityScore >= 95
+                    ? 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-50'
+                    : entry.reliabilityScore >= 90
+                      ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-50'"
+                >
+                  {{ entry.reliabilityScore?.toFixed(1) }}%
+                </Badge>
+              </div>
             </div>
-          </div>
-          <p v-else class="text-xs text-slate-500 text-center py-8">Calculating index benchmarks...</p>
-        </div>
+            <p v-else class="text-xs text-slate-500 text-center py-8">Calculating index benchmarks...</p>
+          </CardContent>
+        </Card>
       </section>
     </div>
   </main>
