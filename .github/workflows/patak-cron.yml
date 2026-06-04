@@ -27,24 +27,3 @@ jobs:
           V_API_URL:      ${{ secrets.PROD_API_URL }}
           INGEST_SECRET:  ${{ secrets.INGEST_SECRET }}
         run: python scripts/extract_and_parse.py
-
-  # Separate job: zero-cost SAIFI/SAIDI score recalculation
-  # Runs daily to avoid hitting Turso read limits on every scrape cycle
-  recalculate_metrics:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-    needs: run_pipeline
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: pip install requests
-      - name: Trigger metric recalculation
-        env:
-          METRICS_WEBHOOK_URL: ${{ secrets.METRICS_WEBHOOK_URL }}
-          INGEST_SECRET:       ${{ secrets.INGEST_SECRET }}
-        run: |
-          curl -X POST "$METRICS_WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
-            -d "{\"secret\": \"$INGEST_SECRET\"}"
