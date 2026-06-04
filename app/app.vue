@@ -166,7 +166,7 @@ onMounted(async () => {
     <header class="border-b border-blue-800 bg-blue-900 text-white sticky top-0 z-50 shadow-md">
       <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-4">
-          <img src="/betterGov_Icon.svg" class="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm object-contain" alt="BetterGov Logo" />
+          <img src="/favicon.svg" class="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm object-contain" alt="Patak Logo" />
           <div>
             <span class="text-xs font-medium tracking-wide uppercase text-blue-200">Civic Infrastructure Tracker</span>
             <h1 class="text-xl font-bold text-white flex items-center gap-2">
