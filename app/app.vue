@@ -258,15 +258,15 @@ onMounted(async () => {
     <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
       
       <!-- Left column: Active outage list -->
-      <section class="lg:col-span-5 flex flex-col gap-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h2 class="text-xs font-medium tracking-wide uppercase text-slate-500 flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-blue-900 animate-ping"></span>
+      <section class="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col gap-5 lg:h-[820px] lg:sticky lg:top-24">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-900 animate-pulse"></span>
             Active Outages
           </h2>
 
           <!-- Type filter buttons -->
-          <div class="flex bg-white border border-slate-200 p-0.5 rounded-xl text-xs shadow-sm">
+          <div class="flex bg-slate-50 border border-slate-200 p-0.5 rounded-xl text-xs shadow-sm">
             <button 
               @click="selectedType = 'ALL'"
               :class="selectedType === 'ALL' ? 'bg-blue-900 text-white font-semibold' : 'text-slate-600 hover:text-slate-900'"
@@ -292,82 +292,85 @@ onMounted(async () => {
         </div>
 
         <!-- Quick select city suggestion badges -->
-        <div v-if="existingCities.length" class="flex flex-wrap gap-1.5 items-center bg-white border border-slate-200 p-3 rounded-2xl shadow-sm">
-          <span class="text-[10px] uppercase font-bold text-slate-400 mr-1.5">Quick Select:</span>
+        <div v-if="existingCities.length" class="flex flex-wrap gap-1.5 items-center bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+          <span class="text-[9px] uppercase font-bold text-slate-400 mr-1.5">Quick Select:</span>
           <button
             v-for="city in existingCities"
             :key="city"
             @click="searchInput = city; triggerSearch()"
-            class="text-xs px-2.5 py-1 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-lg transition duration-200 flex items-center gap-1"
+            class="text-[11px] px-2 py-0.5 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-md transition duration-200 flex items-center gap-1 shadow-sm font-medium"
           >
             📍 {{ city }}
           </button>
         </div>
 
-        <div v-if="pending" class="py-24 text-center">
-          <div class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4"></div>
-          <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
-        </div>
-
-        <div v-else-if="!outages || outages.length === 0" class="p-12 border border-dashed border-slate-200 bg-white rounded-2xl text-center shadow-sm">
-          <div class="text-3xl mb-3">🔍</div>
-          <p class="text-slate-900 font-bold text-sm mb-1">No interruptions found</p>
-          <p class="text-slate-500 text-xs max-w-xs mx-auto">We couldn't find any active water or power outages matching your search query.</p>
-        </div>
-
-        <div v-else class="flex flex-col gap-4 overflow-y-auto max-h-[72vh] pr-2 scrollbar-thin scrollbar-thumb-slate-200">
-          <div
-            v-for="item in outages"
-            :key="item.id"
-            @click="focusMunicipality(item.municipality)"
-            class="p-5 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/10 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md"
-          >
-            <div class="flex justify-between items-center mb-3">
-              <span 
-                class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200"
-              >
-                {{ item.providerSlug }}
-              </span>
-              <div class="flex items-center gap-2">
-                <span class="text-slate-400 text-xs">🕒</span>
-                <span class="text-xs text-slate-500 font-medium">{{ item.durationHours }}h duration</span>
-              </div>
-            </div>
-
-            <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-900 transition">{{ item.municipality }}</h3>
-            
-            <div class="flex gap-2 items-center mt-1 mb-3">
-              <span 
-                :class="item.status === 'UNANNOUNCED' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200'"
-                class="text-[10px] font-semibold px-2 py-0.5 rounded border"
-              >
-                {{ item.status }}
-              </span>
-              <span class="text-[10px] text-slate-500 font-medium">
-                {{ item.reasonCategory }}
-              </span>
-            </div>
-
-            <!-- Detailed affected areas -->
-            <div v-if="item.affectedAreas && item.affectedAreas.length" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
-              <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay" class="text-xs bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                <span class="text-slate-800 font-bold flex items-center gap-1.5">
-                  <span class="text-blue-600">📍</span> Brgy. {{ group.barangay }}
-                </span>
-                <div v-if="group.streets.length" class="mt-1.5 pl-5 flex flex-col gap-1">
-                  <p v-for="street in group.streets" :key="street" class="text-slate-600 text-[11px] leading-relaxed relative before:content-['•'] before:absolute before:-left-3.5 before:text-slate-400">
-                    {{ street }}
-                  </p>
-                </div>
-                <div v-else class="mt-1 pl-5 text-[11px] text-slate-400 italic">
-                  All areas/streets affected
-                </div>
-              </div>
-            </div>
-
-            <!-- Fallback text snippet -->
-            <p v-else class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">{{ item.rawText }}</p>
+        <!-- Scrollable outage entries list -->
+        <div class="flex-1 overflow-y-auto pr-1 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+          <div v-if="pending" class="py-24 text-center my-auto">
+            <div class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
           </div>
+
+          <div v-else-if="!outages || outages.length === 0" class="p-8 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-center my-auto">
+            <div class="text-3xl mb-3">🔍</div>
+            <p class="text-slate-900 font-bold text-sm mb-1">No interruptions found</p>
+            <p class="text-slate-500 text-xs max-w-xs mx-auto">We couldn't find any active water or power outages matching your search query.</p>
+          </div>
+
+          <template v-else>
+            <div
+              v-for="item in outages"
+              :key="item.id"
+              @click="focusMunicipality(item.municipality)"
+              class="p-5 bg-slate-50/20 hover:bg-slate-50 border border-slate-200/80 hover:border-blue-200 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md"
+            >
+              <div class="flex justify-between items-center mb-3">
+                <span 
+                  class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200"
+                >
+                  {{ item.providerSlug }}
+                </span>
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-400 text-xs">🕒</span>
+                  <span class="text-xs text-slate-500 font-medium">{{ item.durationHours }}h duration</span>
+                </div>
+              </div>
+
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-900 transition">{{ item.municipality }}</h3>
+              
+              <div class="flex gap-2 items-center mt-1 mb-3">
+                <span 
+                  :class="item.status === 'UNANNOUNCED' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                  class="text-[10px] font-semibold px-2 py-0.5 rounded border"
+                >
+                  {{ item.status }}
+                </span>
+                <span class="text-[10px] text-slate-500 font-medium">
+                  {{ item.reasonCategory }}
+                </span>
+              </div>
+
+              <!-- Detailed affected areas -->
+              <div v-if="item.affectedAreas && item.affectedAreas.length" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
+                <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay" class="text-xs bg-white p-2.5 rounded-lg border border-slate-200/60 shadow-sm">
+                  <span class="text-slate-800 font-bold flex items-center gap-1.5">
+                    <span class="text-blue-600">📍</span> Brgy. {{ group.barangay }}
+                  </span>
+                  <div v-if="group.streets.length" class="mt-1.5 pl-5 flex flex-col gap-1">
+                    <p v-for="street in group.streets" :key="street" class="text-slate-600 text-[11px] leading-relaxed relative before:content-['•'] before:absolute before:-left-3.5 before:text-slate-400">
+                      {{ street }}
+                    </p>
+                  </div>
+                  <div v-else class="mt-1 pl-5 text-[11px] text-slate-400 italic">
+                    All areas/streets affected
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fallback text snippet -->
+              <p v-else class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">{{ item.rawText }}</p>
+            </div>
+          </template>
         </div>
       </section>
 
