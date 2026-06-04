@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/recalculate-metrics",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

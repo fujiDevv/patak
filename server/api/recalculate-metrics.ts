@@ -5,14 +5,40 @@ import { useLibsql } from '../utils/db';
 const ASSUMED_CUSTOMERS = 50_000;
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event);
-  const client = useLibsql();
-
-  // Validate secret
+  const method = event.node.req.method;
+  const authHeader = getHeader(event, 'authorization');
   const localSecret = process.env.INGEST_SECRET || 'local_secret';
-  if (!body.secret || body.secret !== localSecret) {
+  
+  let isAuthorized = false;
+
+  // 1. Verify Vercel Cron Secret (Bearer token)
+  if (process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+    isAuthorized = true;
+  }
+
+  // 2. Verify POST request body secret
+  if (!isAuthorized && method === 'POST') {
+    try {
+      const body = await readBody(event);
+      if (body.secret === localSecret) {
+        isAuthorized = true;
+      }
+    } catch {}
+  }
+
+  // 3. Verify GET query secret
+  if (!isAuthorized) {
+    const query = getQuery(event);
+    if (query.secret === localSecret) {
+      isAuthorized = true;
+    }
+  }
+
+  if (!isAuthorized) {
     throw createError({ statusCode: 401, message: 'Unauthorized' });
   }
+
+  const client = useLibsql();
 
   // Pull all events
   const result = await client.execute(
