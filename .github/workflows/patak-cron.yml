@@ -19,7 +19,7 @@ jobs:
 
       - name: Dependency install
         run: |
-          pip install scrapling beautifulsoup4 requests python-dateutil spacy lxml
+          pip install scrapling beautifulsoup4 requests python-dateutil spacy lxml click
           python -m spacy download en_core_web_sm
 
       - name: Run extraction pipeline
