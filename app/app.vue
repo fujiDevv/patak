@@ -1,4 +1,9 @@
 <script setup>
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { ref, onMounted, watch } from 'vue'
 
 const searchInput = ref('')
@@ -27,8 +32,8 @@ const leaderboard = computed(() => {
   if (!rawLeaderboard.value) return []
   const list = [...rawLeaderboard.value]
   return list.sort((a, b) => {
-    return sortAsc.value 
-      ? a.reliabilityScore - b.reliabilityScore 
+    return sortAsc.value
+      ? a.reliabilityScore - b.reliabilityScore
       : b.reliabilityScore - a.reliabilityScore
   })
 })
@@ -36,13 +41,13 @@ const leaderboard = computed(() => {
 // Computed existing cities present in the dataset (outages or leaderboard)
 const existingCities = computed(() => {
   const cities = new Set()
-  
+
   if (rawLeaderboard.value) {
     rawLeaderboard.value.forEach(item => {
       if (item.municipality) cities.add(item.municipality.trim())
     })
   }
-  
+
   if (rawOutages.value) {
     rawOutages.value.forEach(item => {
       if (item.municipality) {
@@ -53,7 +58,7 @@ const existingCities = computed(() => {
       }
     })
   }
-  
+
   return Array.from(cities).sort()
 })
 
@@ -114,16 +119,16 @@ const MUNICIPALITY_COORDS = {
 
 useHead({
   link: [
-    { 
-      rel: 'icon', 
-      type: 'image/svg+xml', 
-      href: '/favicon.svg' 
+    {
+      rel: 'icon',
+      type: 'image/svg+xml',
+      href: '/favicon.svg'
     },
-    { 
-      rel: 'stylesheet', 
-      href: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 
-      integrity: 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=', 
-      crossorigin: '' 
+    {
+      rel: 'stylesheet',
+      href: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+      integrity: 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=',
+      crossorigin: ''
     },
     {
       rel: 'stylesheet',
@@ -144,10 +149,10 @@ function focusMunicipality(muniName) {
 onMounted(async () => {
   if (process.client) {
     const L = await import('leaflet')
-    
+
     // Initialize map
     map = L.map(mapElement.value, { zoomControl: false }).setView([14.5764, 121.04], 11)
-    
+
     // Add light theme tile layer (CartoDB Positron)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://osm.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CartoDB</a>',
@@ -156,7 +161,7 @@ onMounted(async () => {
     }).addTo(map)
 
     L.control.zoom({ position: 'bottomright' }).addTo(map)
-    
+
     markersGroup = L.layerGroup().addTo(map)
 
     // Watch outages to paint markers dynamically
@@ -167,14 +172,14 @@ onMounted(async () => {
       newOutages.forEach((item) => {
         const muni = item.municipality
         const munis = muni.split(',').map(m => m.trim())
-        
+
         munis.forEach((mName) => {
           const coords = MUNICIPALITY_COORDS[mName]
           if (coords) {
             const isEmergency = item.reasonCategory === 'EMERGENCY'
             const isPower = item.providerSlug === 'meralco'
             const color = isEmergency ? '#b91c1c' : (isPower ? '#1e3a8a' : '#3b82f6') // Muted red: Emergency, Deep Blue: Power, Light Blue: Water
-            
+
             const circle = L.circleMarker(coords, {
               radius: 9,
               fillColor: color,
@@ -212,12 +217,14 @@ onMounted(async () => {
     <header class="border-b border-blue-800 bg-blue-900 text-white sticky top-0 z-50 shadow-md">
       <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-4">
-          <img src="/favicon.svg" class="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm object-contain" alt="Patak Logo" />
+          <img src="/favicon.svg" class="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm object-contain"
+            alt="Patak Logo" />
           <div>
             <span class="text-xs font-medium tracking-wide uppercase text-blue-200">Civic Infrastructure Tracker</span>
             <h1 class="text-xl font-bold text-white flex items-center gap-2">
               PATAK
-              <span class="text-[10px] px-2 py-0.5 bg-blue-800 text-blue-100 rounded-full border border-blue-700 animate-pulse font-medium">LIVE</span>
+              <span
+                class="text-[10px] px-2 py-0.5 bg-blue-800 text-blue-100 rounded-full border border-blue-700 animate-pulse font-medium">LIVE</span>
             </h1>
           </div>
         </div>
@@ -225,31 +232,20 @@ onMounted(async () => {
         <!-- Search controls -->
         <div class="flex items-center gap-2 w-full md:w-auto">
           <div class="relative w-full md:w-80">
-            <Input
-              v-model="searchInput"
-              @keyup.enter="triggerSearch"
-              list="existing-cities"
+            <Input v-model="searchInput" @keyup.enter="triggerSearch" list="existing-cities"
               placeholder="Search city (e.g. Quezon City)..."
-              class="pl-10 pr-10 py-2.5 w-full bg-white border border-slate-200 focus-visible:ring-blue-900/10 focus-visible:border-blue-900 text-slate-900 placeholder-slate-400 shadow-sm rounded-xl h-10"
-            />
+              class="pl-10 pr-10 py-2.5 w-full bg-white border border-slate-200 focus-visible:ring-blue-900/10 focus-visible:border-blue-900 text-slate-900 placeholder-slate-400 shadow-sm rounded-xl h-10" />
             <datalist id="existing-cities">
               <option v-for="city in existingCities" :key="city" :value="city" />
             </datalist>
             <span class="absolute left-3.5 top-3.5 text-slate-400 text-xs">🔍</span>
-            <Button 
-              v-if="activeSearch" 
-              variant="ghost"
-              size="icon"
-              @click="clearSearch" 
-              class="absolute right-2 top-2 w-6 h-6 rounded-full text-slate-500 hover:bg-slate-100 p-0 flex items-center justify-center"
-            >
+            <Button v-if="activeSearch" variant="ghost" size="icon" @click="clearSearch"
+              class="absolute right-2 top-2 w-6 h-6 rounded-full text-slate-500 hover:bg-slate-100 p-0 flex items-center justify-center">
               ✕
             </Button>
           </div>
-          <Button 
-            @click="triggerSearch" 
-            class="bg-blue-900 text-white hover:bg-blue-850 font-medium px-5 py-2 text-sm rounded-xl shadow-sm h-10"
-          >
+          <Button @click="triggerSearch"
+            class="bg-blue-900 text-white hover:bg-blue-850 font-medium px-5 py-2 text-sm rounded-xl shadow-sm h-10">
             Find
           </Button>
         </div>
@@ -257,10 +253,12 @@ onMounted(async () => {
     </header>
 
     <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-      
+
       <!-- Left column: Active outage list card -->
-      <Card class="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col gap-5 lg:h-[820px] lg:sticky lg:top-24 overflow-hidden p-0">
-        <CardHeader class="p-6 pb-4 border-b border-slate-100 flex flex-row items-center justify-between gap-3 space-y-0">
+      <Card
+        class="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col gap-5 lg:h-[820px] lg:sticky lg:top-24 overflow-hidden p-0">
+        <CardHeader
+          class="p-6 pb-4 border-b border-slate-100 flex flex-row items-center justify-between gap-3 space-y-0">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-blue-900 animate-pulse"></span>
             <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900">
@@ -270,31 +268,19 @@ onMounted(async () => {
 
           <!-- Type filter buttons -->
           <div class="flex bg-slate-50 border border-slate-200 p-0.5 rounded-xl text-xs shadow-sm">
-            <Button 
-              variant="ghost"
-              size="xs"
-              @click="selectedType = 'ALL'"
+            <Button variant="ghost" size="xs" @click="selectedType = 'ALL'"
               :class="selectedType === 'ALL' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1 h-7 rounded-lg transition"
-            >
+              class="px-2.5 py-1 h-7 rounded-lg transition">
               All
             </Button>
-            <Button 
-              variant="ghost"
-              size="xs"
-              @click="selectedType = 'POWER'"
+            <Button variant="ghost" size="xs" @click="selectedType = 'POWER'"
               :class="selectedType === 'POWER' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1 h-7 rounded-lg transition"
-            >
+              class="px-2.5 py-1 h-7 rounded-lg transition">
               ⚡ Power
             </Button>
-            <Button 
-              variant="ghost"
-              size="xs"
-              @click="selectedType = 'WATER'"
+            <Button variant="ghost" size="xs" @click="selectedType = 'WATER'"
               :class="selectedType === 'WATER' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1 h-7 rounded-lg transition"
-            >
+              class="px-2.5 py-1 h-7 rounded-lg transition">
               💧 Water
             </Button>
           </div>
@@ -303,94 +289,98 @@ onMounted(async () => {
         <!-- Quick select city suggestion badges -->
         <div v-if="existingCities.length" class="px-6 flex flex-wrap gap-1.5 items-center">
           <span class="text-[9px] uppercase font-bold text-slate-400 mr-1.5">Quick Select:</span>
-          <Badge
-            v-for="city in existingCities"
-            :key="city"
-            @click="searchInput = city; triggerSearch()"
+          <Badge v-for="city in existingCities" :key="city" @click="searchInput = city; triggerSearch()"
             variant="outline"
-            class="text-[11px] px-2.5 py-0.5 hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-lg cursor-pointer transition duration-200 flex items-center gap-1 shadow-sm font-medium"
-          >
+            class="text-[11px] px-2.5 py-0.5 hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-lg cursor-pointer transition duration-200 flex items-center gap-1 shadow-sm font-medium">
             📍 {{ city }}
           </Badge>
         </div>
 
         <!-- Scrollable outage entries list -->
-        <CardContent class="flex-1 overflow-y-auto pr-1 p-6 pt-0 flex flex-col gap-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-          <div v-if="pending" class="py-24 text-center my-auto">
-            <div class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
-          </div>
-
-          <div v-else-if="!outages || outages.length === 0" class="p-8 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-center my-auto">
-            <div class="text-3xl mb-3">🔍</div>
-            <p class="text-slate-900 font-bold text-sm mb-1">No interruptions found</p>
-            <p class="text-slate-500 text-xs max-w-xs mx-auto">We couldn't find any active water or power outages matching your search query.</p>
-          </div>
-
-          <template v-else>
-            <Card
-              v-for="item in outages"
-              :key="item.id"
-              @click="focusMunicipality(item.municipality)"
-              class="p-5 bg-slate-50/20 hover:bg-slate-50 border border-slate-200/80 hover:border-blue-200 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md"
-            >
-              <div class="flex justify-between items-center mb-3">
-                <Badge 
-                  variant="secondary"
-                  class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200"
-                >
-                  {{ item.providerSlug }}
-                </Badge>
-                <div class="flex items-center gap-2">
-                  <span class="text-slate-400 text-xs">🕒</span>
-                  <span class="text-xs text-slate-500 font-medium">{{ item.durationHours }}h duration</span>
+        <CardContent class="flex-1 p-6 pt-0 overflow-hidden flex flex-col">
+          <ScrollArea class="flex-1 pr-4 h-[200px]">
+            <div class="flex flex-col gap-4">
+              <div v-if="pending" class="py-24 text-center my-auto">
+                <div
+                  class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4">
                 </div>
+                <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
               </div>
 
-              <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-900 transition">{{ item.municipality }}</h3>
-              
-              <div class="flex gap-2 items-center mt-1 mb-3">
-                <Badge 
-                  :variant="item.status === 'UNANNOUNCED' ? 'destructive' : 'secondary'"
-                  class="text-[10px] font-semibold px-2 py-0.5 rounded border"
-                >
-                  {{ item.status }}
-                </Badge>
-                <span class="text-[10px] text-slate-500 font-medium">
-                  {{ item.reasonCategory }}
-                </span>
+              <div v-else-if="!outages || outages.length === 0"
+                class="p-8 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-center my-auto w-full">
+                <div class="text-3xl mb-3">🔍</div>
+                <p class="text-slate-900 font-bold text-sm mb-1">No interruptions found</p>
+                <p class="text-slate-500 text-xs max-w-xs mx-auto">We couldn't find any active water or power outages
+                  matching your search query.</p>
               </div>
 
-              <!-- Detailed affected areas -->
-              <div v-if="item.affectedAreas && item.affectedAreas.length" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
-                <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay" class="text-xs bg-white p-2.5 rounded-lg border border-slate-200/60 shadow-sm">
-                  <span class="text-slate-800 font-bold flex items-center gap-1.5">
-                    <span class="text-blue-600">📍</span> Brgy. {{ group.barangay }}
-                  </span>
-                  <div v-if="group.streets.length" class="mt-1.5 pl-5 flex flex-col gap-1">
-                    <p v-for="street in group.streets" :key="street" class="text-slate-600 text-[11px] leading-relaxed relative before:content-['•'] before:absolute before:-left-3.5 before:text-slate-400">
-                      {{ street }}
-                    </p>
+              <template v-else>
+                <Card v-for="item in outages" :key="item.id" @click="focusMunicipality(item.municipality)"
+                  class="p-5 bg-slate-50/20 hover:bg-slate-50 border border-slate-200/80 hover:border-blue-200 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md">
+                  <div class="flex justify-between items-center mb-3">
+                    <Badge variant="secondary"
+                      class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200">
+                      {{ item.providerSlug }}
+                    </Badge>
+                    <div class="flex items-center gap-2">
+                      <span class="text-slate-400 text-xs">🕒</span>
+                      <span class="text-xs text-slate-500 font-medium">{{ item.durationHours }}h duration</span>
+                    </div>
                   </div>
-                  <div v-else class="mt-1 pl-5 text-[11px] text-slate-400 italic">
-                    All areas/streets affected
-                  </div>
-                </div>
-              </div>
 
-              <!-- Fallback text snippet -->
-              <p v-else class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">{{ item.rawText }}</p>
-            </Card>
-          </template>
+                  <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-900 transition">{{
+                    item.municipality
+                    }}</h3>
+
+                  <div class="flex gap-2 items-center mt-1 mb-3">
+                    <Badge :variant="item.status === 'UNANNOUNCED' ? 'destructive' : 'secondary'"
+                      class="text-[10px] font-semibold px-2 py-0.5 rounded border">
+                      {{ item.status }}
+                    </Badge>
+                    <span class="text-[10px] text-slate-500 font-medium">
+                      {{ item.reasonCategory }}
+                    </span>
+                  </div>
+
+                  <!-- Detailed affected areas -->
+                  <div v-if="item.affectedAreas && item.affectedAreas.length"
+                    class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
+                    <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay"
+                      class="text-xs bg-white p-2.5 rounded-lg border border-slate-200/60 shadow-sm">
+                      <span class="text-slate-800 font-bold flex items-center gap-1.5">
+                        <span class="text-blue-600">📍</span> Brgy. {{ group.barangay }}
+                      </span>
+                      <div v-if="group.streets.length" class="mt-1.5 pl-5 flex flex-col gap-1">
+                        <p v-for="street in group.streets" :key="street"
+                          class="text-slate-600 text-[11px] leading-relaxed relative before:content-['•'] before:absolute before:-left-3.5 before:text-slate-400">
+                          {{ street }}
+                        </p>
+                      </div>
+                      <div v-else class="mt-1 pl-5 text-[11px] text-slate-400 italic">
+                        All areas/streets affected
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Fallback text snippet -->
+                  <p v-else
+                    class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">
+                    {{ item.rawText }}</p>
+                </Card>
+              </template>
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
 
       <!-- Right column: Map and Reliability Leaderboard -->
       <section class="lg:col-span-7 flex flex-col gap-8">
-        
+
         <!-- CartoDB Map Container -->
         <Card class="relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col p-0">
-          <CardHeader class="px-5 py-3 border-b border-slate-200 flex flex-row items-center justify-between bg-slate-50 space-y-0">
+          <CardHeader
+            class="px-5 py-3 border-b border-slate-200 flex flex-row items-center justify-between bg-slate-50 space-y-0">
             <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 flex items-center gap-2">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-900"></span>
               Live Interruption Heatmap
@@ -406,59 +396,57 @@ onMounted(async () => {
         <Card class="bg-white border border-slate-200 rounded-xl p-0 flex flex-col shadow-sm">
           <CardHeader class="flex flex-row items-center justify-between border-b border-slate-100 p-6 pb-4 space-y-0">
             <div>
-              <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 mb-1">Municipal Reliability Index</CardTitle>
-              <CardDescription class="text-[10px] text-slate-500">Ranked by SAIFI & SAIDI scoring coefficients</CardDescription>
+              <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 mb-1">Municipal Reliability
+                Index
+              </CardTitle>
+              <CardDescription class="text-[10px] text-slate-500">Ranked by SAIFI & SAIDI scoring coefficients
+              </CardDescription>
             </div>
-            
+
             <!-- Sorting toggle -->
-            <Button 
-              variant="outline"
-              size="sm"
-              @click="sortAsc = !sortAsc"
-              class="text-xs border-blue-200 text-blue-900 hover:bg-blue-50 px-3 py-1 rounded-xl transition flex items-center gap-1.5 shadow-sm font-medium h-9"
-            >
+            <Button variant="outline" size="sm" @click="sortAsc = !sortAsc"
+              class="text-xs border-blue-200 text-blue-900 hover:bg-blue-50 px-3 py-1 rounded-xl transition flex items-center gap-1.5 shadow-sm font-medium h-9">
               <span>Sort:</span>
               <span class="font-bold text-blue-900">{{ sortAsc ? 'Worst First' : 'Best First' }}</span>
             </Button>
           </CardHeader>
 
           <CardContent class="p-6 pt-0">
-            <div v-if="leaderboard && leaderboard.length" class="flex flex-col gap-2 overflow-y-auto max-h-[300px] pr-1 mt-4">
-              <div
-                v-for="(entry, i) in leaderboard"
-                :key="entry.municipality"
-                @click="focusMunicipality(entry.municipality)"
-                class="flex items-center gap-4 text-sm p-2.5 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-200/60 group"
-              >
-                <!-- Ranking index -->
-                <span class="text-slate-400 font-mono w-6 text-center text-xs group-hover:text-slate-600 transition">{{ sortAsc ? i + 1 : leaderboard.length - i }}</span>
-                
-                <!-- Municipality Name -->
-                <span class="flex-1 text-slate-700 font-semibold group-hover:text-slate-900 transition">{{ entry.municipality }}</span>
-                
-                <!-- Metrics stats -->
-                <div class="hidden sm:flex items-center gap-4 text-xs text-slate-500">
-                  <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                    SAIFI <strong class="text-slate-800">{{ entry.saifiCount?.toFixed(2) }}</strong>
-                  </span>
-                  <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                    SAIDI <strong class="text-slate-800">{{ entry.saidiHours?.toFixed(1) }}h</strong>
-                  </span>
-                </div>
+            <ScrollArea v-if="leaderboard && leaderboard.length" class="h-[300px] pr-4 mt-4">
+              <div class="flex flex-col gap-2">
+                <div v-for="(entry, i) in leaderboard" :key="entry.municipality"
+                  @click="focusMunicipality(entry.municipality)"
+                  class="flex items-center gap-4 text-sm p-2.5 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-200/60 group">
+                  <!-- Ranking index -->
+                  <span class="text-slate-400 font-mono w-6 text-center text-xs group-hover:text-slate-600 transition">{{
+                    sortAsc ? i + 1 : leaderboard.length - i }}</span>
 
-                <!-- Reliability Gauge Score -->
-                <Badge
-                  class="text-xs font-mono font-bold px-3 py-1 rounded-full text-right shadow-sm"
-                  :class="entry.reliabilityScore >= 95
+                  <!-- Municipality Name -->
+                  <span class="flex-1 text-slate-700 font-semibold group-hover:text-slate-900 transition">{{
+                    entry.municipality
+                  }}</span>
+
+                  <!-- Metrics stats -->
+                  <div class="hidden sm:flex items-center gap-4 text-xs text-slate-500">
+                    <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
+                      SAIFI <strong class="text-slate-800">{{ entry.saifiCount?.toFixed(2) }}</strong>
+                    </span>
+                    <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
+                      SAIDI <strong class="text-slate-800">{{ entry.saidiHours?.toFixed(1) }}h</strong>
+                    </span>
+                  </div>
+
+                  <!-- Reliability Gauge Score -->
+                  <Badge class="text-xs font-mono font-bold px-3 py-1 rounded-full text-right shadow-sm" :class="entry.reliabilityScore >= 95
                     ? 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-50'
                     : entry.reliabilityScore >= 90
                       ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-100'
-                      : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-50'"
-                >
-                  {{ entry.reliabilityScore?.toFixed(1) }}%
-                </Badge>
+                      : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-50'">
+                    {{ entry.reliabilityScore?.toFixed(1) }}%
+                  </Badge>
+                </div>
               </div>
-            </div>
+            </ScrollArea>
             <p v-else class="text-xs text-slate-500 text-center py-8">Calculating index benchmarks...</p>
           </CardContent>
         </Card>
@@ -472,6 +460,7 @@ onMounted(async () => {
 .leaflet-container {
   background: #f8fafc !important;
 }
+
 .leaflet-popup-content-wrapper {
   background: #ffffff !important;
   color: #0f172a !important;
@@ -479,10 +468,12 @@ onMounted(async () => {
   border-radius: 12px !important;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
 }
+
 .leaflet-popup-tip {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
 }
+
 .leaflet-popup-close-button {
   color: #64748b !important;
 }
@@ -491,13 +482,16 @@ onMounted(async () => {
 .scrollbar-thin::-webkit-scrollbar {
   width: 5px;
 }
+
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
 }
+
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
