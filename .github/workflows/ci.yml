@@ -23,7 +23,7 @@ jobs:
         run: bun install
 
       - name: Nuxt Prepare (Generate Types)
-        run: bun npx nuxt prepare
+        run: bun run nuxt prepare
 
       - name: Build Application
         run: bun run build
