@@ -12,6 +12,7 @@
   "dependencies": {
     "@libsql/client": "^0.17.3",
     "@lucide/vue": "^1.17.0",
+    "@tanstack/vue-table": "^8.21.3",
     "@vueuse/core": "^14.3.0",
     "@vueuse/nuxt": "^14.3.0",
     "class-variance-authority": "^0.7.1",

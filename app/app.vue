@@ -4,12 +4,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ref, onMounted, watch } from 'vue'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ref, onMounted, watch, computed } from 'vue'
 
 const searchInput = ref('')
 const activeSearch = ref('')
 const selectedType = ref('ALL') // 'ALL' | 'POWER' | 'WATER'
-const sortAsc = ref(true) // true: lowest score first, false: highest first
+const sortAscStr = ref('worst') // 'worst' | 'best'
+
+const sortAsc = computed(() => sortAscStr.value === 'worst')
 
 // Fetch outages and leaderboard
 const { data: rawOutages, pending } = await useFetch(() => `/api/outages?municipality=${activeSearch.value}`)
@@ -118,6 +127,7 @@ const MUNICIPALITY_COORDS = {
 }
 
 useHead({
+  title: 'Patak - Civic Infrastructure Tracker',
   link: [
     {
       rel: 'icon',
@@ -129,10 +139,6 @@ useHead({
       href: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
       integrity: 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=',
       crossorigin: ''
-    },
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;900&display=swap'
     }
   ]
 })
@@ -178,7 +184,7 @@ onMounted(async () => {
           if (coords) {
             const isEmergency = item.reasonCategory === 'EMERGENCY'
             const isPower = item.providerSlug === 'meralco'
-            const color = isEmergency ? '#b91c1c' : (isPower ? '#1e3a8a' : '#3b82f6') // Muted red: Emergency, Deep Blue: Power, Light Blue: Water
+            const color = isEmergency ? '#ef4444' : (isPower ? '#eab308' : '#3b82f6') // Red: Emergency, Yellow: Power, Blue: Water
 
             const circle = L.circleMarker(coords, {
               radius: 9,
@@ -191,14 +197,14 @@ onMounted(async () => {
 
             const providerEmoji = isPower ? '⚡' : '💧'
             circle.bindPopup(`
-              <div class="text-slate-900 font-sans p-1 max-w-[220px]">
+              <div class="font-sans p-1 max-w-[220px]">
                 <div class="flex items-center gap-1.5 mb-1">
                   <span class="text-xs">${providerEmoji}</span>
-                  <span class="text-[10px] font-medium uppercase tracking-wider text-blue-900">${item.providerSlug}</span>
+                  <span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">${item.providerSlug}</span>
                 </div>
-                <h4 class="font-bold text-sm text-slate-900">${mName}</h4>
-                <p class="text-xs text-slate-500 mt-0.5">${item.reasonCategory} · ${item.durationHours}h duration</p>
-                <p class="text-[10px] text-slate-600 mt-1 leading-relaxed line-clamp-3">${item.rawText}</p>
+                <h4 class="font-bold text-sm">${mName}</h4>
+                <p class="text-xs text-muted-foreground mt-0.5">${item.reasonCategory} · ${item.durationHours}h duration</p>
+                <p class="text-[11px] text-muted-foreground mt-1 leading-relaxed line-clamp-3">${item.rawText}</p>
               </div>
             `)
 
@@ -212,162 +218,158 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased">
-    <!-- Header bar -->
-    <header class="border-b border-blue-800 bg-blue-900 text-white sticky top-0 z-50 shadow-md">
-      <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div class="flex items-center gap-4">
-          <img src="/favicon.svg" class="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm object-contain"
-            alt="Patak Logo" />
-          <div>
-            <span class="text-xs font-medium tracking-wide uppercase text-blue-200">Civic Infrastructure Tracker</span>
-            <h1 class="text-xl font-bold text-white flex items-center gap-2">
+  <main class="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary">
+    <!-- Premium Header bar -->
+    <header class="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div class="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <Avatar class="h-9 w-9 border bg-background shadow-sm">
+            <AvatarImage src="/favicon.svg" alt="Patak Logo" class="p-1 object-contain" />
+            <AvatarFallback>PT</AvatarFallback>
+          </Avatar>
+          <div class="flex flex-col">
+            <h1 class="text-lg font-bold leading-none tracking-tight flex items-center gap-2">
               PATAK
-              <span
-                class="text-[10px] px-2 py-0.5 bg-blue-800 text-blue-100 rounded-full border border-blue-700 animate-pulse font-medium">LIVE</span>
+              <Badge variant="secondary" class="h-5 px-1.5 text-[10px] tracking-widest font-semibold uppercase animate-pulse bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">Live</Badge>
             </h1>
+            <span class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Civic Infrastructure</span>
           </div>
         </div>
 
         <!-- Search controls -->
-        <div class="flex items-center gap-2 w-full md:w-auto">
-          <div class="relative w-full md:w-80">
+        <div class="flex items-center gap-2 w-full max-w-sm ml-auto">
+          <div class="relative w-full">
             <Input v-model="searchInput" @keyup.enter="triggerSearch" list="existing-cities"
               placeholder="Search city (e.g. Quezon City)..."
-              class="pl-10 pr-10 py-2.5 w-full bg-white border border-slate-200 focus-visible:ring-blue-900/10 focus-visible:border-blue-900 text-slate-900 placeholder-slate-400 shadow-sm rounded-xl h-10" />
+              class="pr-9 w-full bg-background shadow-sm h-9 rounded-full focus-visible:ring-primary/20" />
             <datalist id="existing-cities">
               <option v-for="city in existingCities" :key="city" :value="city" />
             </datalist>
-            <span class="absolute left-3.5 top-3.5 text-slate-400 text-xs">🔍</span>
             <Button v-if="activeSearch" variant="ghost" size="icon" @click="clearSearch"
-              class="absolute right-2 top-2 w-6 h-6 rounded-full text-slate-500 hover:bg-slate-100 p-0 flex items-center justify-center">
-              ✕
+              class="absolute right-1 top-1 h-7 w-7 rounded-full text-muted-foreground hover:text-foreground">
+              <span class="text-xs">✕</span>
             </Button>
           </div>
-          <Button @click="triggerSearch"
-            class="bg-blue-900 text-white hover:bg-blue-850 font-medium px-5 py-2 text-sm rounded-xl shadow-sm h-10">
+          <Button @click="triggerSearch" class="h-9 rounded-full px-4 shadow-sm font-semibold transition-all hover:shadow-md active:scale-95">
             Find
           </Button>
         </div>
       </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+    <div class="container mx-auto px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
       <!-- Left column: Active outage list card -->
-      <Card
-        class="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col gap-5 lg:h-[820px] lg:sticky lg:top-24 overflow-hidden p-0">
-        <CardHeader
-          class="p-6 pb-4 border-b border-slate-100 flex flex-row items-center justify-between gap-3 space-y-0">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-900 animate-pulse"></span>
-            <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900">
+      <Card class="lg:col-span-5 flex flex-col gap-0 lg:h-[calc(100vh-8rem)] lg:sticky lg:top-24 overflow-hidden border-border/50 shadow-sm bg-background/50 backdrop-blur-sm">
+        <CardHeader class="p-5 pb-4 border-b border-border/50 flex flex-row items-center justify-between space-y-0 bg-background/50">
+          <div class="flex items-center gap-2.5">
+            <div class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </div>
+            <CardTitle class="text-sm font-bold tracking-wide uppercase">
               Active Outages
             </CardTitle>
           </div>
 
-          <!-- Type filter buttons -->
-          <div class="flex bg-slate-50 border border-slate-200 p-0.5 rounded-xl text-xs shadow-sm">
-            <Button variant="ghost" size="xs" @click="selectedType = 'ALL'"
-              :class="selectedType === 'ALL' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1 h-7 rounded-lg transition">
-              All
-            </Button>
-            <Button variant="ghost" size="xs" @click="selectedType = 'POWER'"
-              :class="selectedType === 'POWER' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1 h-7 rounded-lg transition">
-              ⚡ Power
-            </Button>
-            <Button variant="ghost" size="xs" @click="selectedType = 'WATER'"
-              :class="selectedType === 'WATER' ? 'bg-blue-900 text-white hover:bg-blue-900/90 font-semibold' : 'text-slate-600 hover:text-slate-900'"
-              class="px-2.5 py-1 h-7 rounded-lg transition">
-              💧 Water
-            </Button>
-          </div>
+          <!-- Type filter Tabs -->
+          <Tabs v-model="selectedType" class="w-auto">
+            <TabsList class="h-8 grid w-full grid-cols-3">
+              <TabsTrigger value="ALL" class="text-xs px-2.5 py-1">All</TabsTrigger>
+              <TabsTrigger value="POWER" class="text-xs px-2.5 py-1">⚡ Power</TabsTrigger>
+              <TabsTrigger value="WATER" class="text-xs px-2.5 py-1">💧 Water</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
 
         <!-- Quick select city suggestion badges -->
-        <div v-if="existingCities.length" class="px-6 flex flex-wrap gap-1.5 items-center">
-          <span class="text-[9px] uppercase font-bold text-slate-400 mr-1.5">Quick Select:</span>
+        <div v-if="existingCities.length" class="px-5 py-3 border-b border-border/50 flex flex-wrap gap-2 items-center bg-muted/20">
+          <span class="text-[10px] uppercase font-bold text-muted-foreground mr-1">Quick Select:</span>
           <Badge v-for="city in existingCities" :key="city" @click="searchInput = city; triggerSearch()"
             variant="outline"
-            class="text-[11px] px-2.5 py-0.5 hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-lg cursor-pointer transition duration-200 flex items-center gap-1 shadow-sm font-medium">
-            📍 {{ city }}
+            class="text-[10px] px-2 py-0 hover:bg-secondary cursor-pointer transition-colors shadow-sm font-medium">
+            {{ city }}
           </Badge>
         </div>
 
         <!-- Scrollable outage entries list -->
-        <CardContent class="flex-1 p-6 pt-0 overflow-hidden flex flex-col">
-          <ScrollArea class="flex-1 pr-4 h-[200px]">
-            <div class="flex flex-col gap-4">
-              <div v-if="pending" class="py-24 text-center my-auto">
-                <div
-                  class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4">
+        <CardContent class="flex-1 p-0 overflow-hidden flex flex-col">
+          <ScrollArea class="h-full">
+            <div class="p-5 flex flex-col gap-4">
+              
+              <!-- Loading State -->
+              <div v-if="pending" class="flex flex-col gap-4 py-8">
+                <Skeleton class="h-32 w-full rounded-xl" v-for="i in 3" :key="i" />
+              </div>
+
+              <!-- Empty State -->
+              <div v-else-if="!outages || outages.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
+                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <span class="text-xl">✨</span>
                 </div>
-                <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
+                <h3 class="font-semibold text-lg">No interruptions found</h3>
+                <p class="text-sm text-muted-foreground max-w-[250px] mt-2">
+                  Everything looks good! We couldn't find any active outages matching your criteria.
+                </p>
               </div>
 
-              <div v-else-if="!outages || outages.length === 0"
-                class="p-8 border border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-center my-auto w-full">
-                <div class="text-3xl mb-3">🔍</div>
-                <p class="text-slate-900 font-bold text-sm mb-1">No interruptions found</p>
-                <p class="text-slate-500 text-xs max-w-xs mx-auto">We couldn't find any active water or power outages
-                  matching your search query.</p>
-              </div>
-
+              <!-- Data State -->
               <template v-else>
-                <Card v-for="item in outages" :key="item.id" @click="focusMunicipality(item.municipality)"
-                  class="p-5 bg-slate-50/20 hover:bg-slate-50 border border-slate-200/80 hover:border-blue-200 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md">
-                  <div class="flex justify-between items-center mb-3">
-                    <Badge variant="secondary"
-                      class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200">
-                      {{ item.providerSlug }}
-                    </Badge>
-                    <div class="flex items-center gap-2">
-                      <span class="text-slate-400 text-xs">🕒</span>
-                      <span class="text-xs text-slate-500 font-medium">{{ item.durationHours }}h duration</span>
+                <div v-for="item in outages" :key="item.id" @click="focusMunicipality(item.municipality)"
+                  class="group relative p-4 rounded-xl border border-border/50 bg-card hover:border-primary/50 cursor-pointer transition-all duration-300 hover:shadow-md hover:shadow-primary/5 overflow-hidden">
+                  
+                  <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-3">
+                      <div class="flex flex-col gap-1.5">
+                        <Badge variant="secondary"
+                          class="text-[10px] font-mono tracking-wider font-bold px-2 py-0 uppercase bg-primary/10 text-primary border-primary/20 w-fit">
+                          {{ item.providerSlug }}
+                        </Badge>
+                        <h3 class="text-lg font-bold group-hover:text-primary transition-colors leading-tight">
+                          {{ item.municipality }}
+                        </h3>
+                      </div>
+                      <div class="flex flex-col items-end gap-1.5">
+                        <Badge :variant="item.status === 'UNANNOUNCED' ? 'destructive' : 'outline'"
+                          class="text-[10px] font-semibold px-2 py-0">
+                          {{ item.status }}
+                        </Badge>
+                        <span class="text-[11px] text-muted-foreground font-medium flex items-center gap-1 bg-muted px-2 py-0.5 rounded-md">
+                          ⏱️ {{ item.durationHours }}h
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <h3 class="text-base font-bold text-slate-900 group-hover:text-blue-900 transition">{{
-                    item.municipality
-                    }}</h3>
-
-                  <div class="flex gap-2 items-center mt-1 mb-3">
-                    <Badge :variant="item.status === 'UNANNOUNCED' ? 'destructive' : 'secondary'"
-                      class="text-[10px] font-semibold px-2 py-0.5 rounded border">
-                      {{ item.status }}
-                    </Badge>
-                    <span class="text-[10px] text-slate-500 font-medium">
+                    <p class="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-3">
                       {{ item.reasonCategory }}
-                    </span>
-                  </div>
+                    </p>
 
-                  <!-- Detailed affected areas -->
-                  <div v-if="item.affectedAreas && item.affectedAreas.length"
-                    class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
-                    <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay"
-                      class="text-xs bg-white p-2.5 rounded-lg border border-slate-200/60 shadow-sm">
-                      <span class="text-slate-800 font-bold flex items-center gap-1.5">
-                        <span class="text-blue-600">📍</span> Brgy. {{ group.barangay }}
-                      </span>
-                      <div v-if="group.streets.length" class="mt-1.5 pl-5 flex flex-col gap-1">
-                        <p v-for="street in group.streets" :key="street"
-                          class="text-slate-600 text-[11px] leading-relaxed relative before:content-['•'] before:absolute before:-left-3.5 before:text-slate-400">
-                          {{ street }}
-                        </p>
-                      </div>
-                      <div v-else class="mt-1 pl-5 text-[11px] text-slate-400 italic">
-                        All areas/streets affected
+                    <!-- Detailed affected areas -->
+                    <div v-if="item.affectedAreas && item.affectedAreas.length" class="mt-4 pt-4 border-t border-border/50 flex flex-col gap-3">
+                      <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay"
+                        class="text-sm bg-muted/30 p-3 rounded-lg border border-border/50">
+                        <span class="font-semibold flex items-center gap-2 text-sm">
+                          📍 Brgy. {{ group.barangay }}
+                        </span>
+                        <div v-if="group.streets.length" class="mt-2 pl-6 flex flex-col gap-1">
+                          <p v-for="street in group.streets" :key="street"
+                            class="text-muted-foreground text-xs relative before:content-[''] before:absolute before:-left-3 before:top-1.5 before:w-1 before:h-1 before:rounded-full before:bg-muted-foreground/50">
+                            {{ street }}
+                          </p>
+                        </div>
+                        <div v-else class="mt-1 pl-6 text-xs text-muted-foreground/70 italic">
+                          All areas/streets affected
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- Fallback text snippet -->
-                  <p v-else
-                    class="text-xs text-slate-600 leading-relaxed mt-2 line-clamp-3 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">
-                    {{ item.rawText }}</p>
-                </Card>
+                    <!-- Fallback text snippet -->
+                    <p v-else class="text-xs text-muted-foreground leading-relaxed mt-2 line-clamp-3 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      {{ item.rawText }}
+                    </p>
+                  </div>
+                </div>
               </template>
             </div>
           </ScrollArea>
@@ -376,78 +378,100 @@ onMounted(async () => {
 
       <!-- Right column: Map and Reliability Leaderboard -->
       <section class="lg:col-span-7 flex flex-col gap-8">
-
-        <!-- CartoDB Map Container -->
-        <Card class="relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col p-0">
-          <CardHeader
-            class="px-5 py-3 border-b border-slate-200 flex flex-row items-center justify-between bg-slate-50 space-y-0">
-            <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-900"></span>
-              Live Interruption Heatmap
-            </CardTitle>
-            <CardDescription class="text-[10px] text-slate-500">Leaflet + CartoDB Positron</CardDescription>
+        <!-- Leaflet Map Container -->
+        <Card class="relative overflow-hidden shadow-sm border-border/50 bg-background/50 backdrop-blur-sm">
+          <CardHeader class="px-5 py-4 border-b border-border/50 flex flex-row items-center justify-between bg-muted/20 space-y-0">
+            <div>
+              <CardTitle class="text-sm font-bold tracking-wide uppercase flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Live Interruption Map
+              </CardTitle>
+              <CardDescription class="text-[11px] mt-1">Interactive overview of active service interruptions</CardDescription>
+            </div>
           </CardHeader>
           <CardContent class="p-0">
-            <div ref="mapElement" class="w-full h-[350px] z-10"></div>
+            <div ref="mapElement" class="w-full h-[380px] z-10 relative"></div>
           </CardContent>
         </Card>
 
         <!-- Municipal Reliability leaderboard -->
-        <Card class="bg-white border border-slate-200 rounded-xl p-0 flex flex-col shadow-sm">
-          <CardHeader class="flex flex-row items-center justify-between border-b border-slate-100 p-6 pb-4 space-y-0">
+        <Card class="flex flex-col shadow-sm border-border/50 bg-background/50 backdrop-blur-sm">
+          <CardHeader class="flex flex-row items-center justify-between border-b border-border/50 px-5 py-4 space-y-0 bg-muted/20">
             <div>
-              <CardTitle class="text-xs font-bold tracking-wide uppercase text-slate-900 mb-1">Municipal Reliability
-                Index
+              <CardTitle class="text-sm font-bold tracking-wide uppercase mb-1">
+                Reliability Leaderboard
               </CardTitle>
-              <CardDescription class="text-[10px] text-slate-500">Ranked by SAIFI & SAIDI scoring coefficients
-              </CardDescription>
+              <CardDescription class="text-[11px]">Ranked by SAIFI & SAIDI coefficients</CardDescription>
             </div>
 
-            <!-- Sorting toggle -->
-            <Button variant="outline" size="sm" @click="sortAsc = !sortAsc"
-              class="text-xs border-blue-200 text-blue-900 hover:bg-blue-50 px-3 py-1 rounded-xl transition flex items-center gap-1.5 shadow-sm font-medium h-9">
-              <span>Sort:</span>
-              <span class="font-bold text-blue-900">{{ sortAsc ? 'Worst First' : 'Best First' }}</span>
-            </Button>
+            <!-- Sorting toggle using Select -->
+            <Select v-model="sortAscStr">
+              <SelectTrigger class="w-[140px] h-8 text-xs font-medium bg-background">
+                <SelectValue placeholder="Sort order" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="worst" class="text-xs font-medium">Worst First</SelectItem>
+                <SelectItem value="best" class="text-xs font-medium">Best First</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
 
-          <CardContent class="p-6 pt-0">
-            <ScrollArea v-if="leaderboard && leaderboard.length" class="h-[300px] pr-4 mt-4">
-              <div class="flex flex-col gap-2">
-                <div v-for="(entry, i) in leaderboard" :key="entry.municipality"
-                  @click="focusMunicipality(entry.municipality)"
-                  class="flex items-center gap-4 text-sm p-2.5 rounded-xl hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-200/60 group">
-                  <!-- Ranking index -->
-                  <span class="text-slate-400 font-mono w-6 text-center text-xs group-hover:text-slate-600 transition">{{
-                    sortAsc ? i + 1 : leaderboard.length - i }}</span>
-
-                  <!-- Municipality Name -->
-                  <span class="flex-1 text-slate-700 font-semibold group-hover:text-slate-900 transition">{{
-                    entry.municipality
-                  }}</span>
-
-                  <!-- Metrics stats -->
-                  <div class="hidden sm:flex items-center gap-4 text-xs text-slate-500">
-                    <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                      SAIFI <strong class="text-slate-800">{{ entry.saifiCount?.toFixed(2) }}</strong>
-                    </span>
-                    <span class="font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                      SAIDI <strong class="text-slate-800">{{ entry.saidiHours?.toFixed(1) }}h</strong>
-                    </span>
-                  </div>
-
-                  <!-- Reliability Gauge Score -->
-                  <Badge class="text-xs font-mono font-bold px-3 py-1 rounded-full text-right shadow-sm" :class="entry.reliabilityScore >= 95
-                    ? 'bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-50'
-                    : entry.reliabilityScore >= 90
-                      ? 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-100'
-                      : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-50'">
-                    {{ entry.reliabilityScore?.toFixed(1) }}%
-                  </Badge>
-                </div>
-              </div>
+          <CardContent class="p-0">
+            <ScrollArea v-if="leaderboard && leaderboard.length" class="h-[320px]">
+              <Table>
+                <TableHeader class="bg-muted/50 sticky top-0 z-10">
+                  <TableRow class="hover:bg-transparent">
+                    <TableHead class="w-[60px] text-center text-xs font-semibold uppercase tracking-wider">Rank</TableHead>
+                    <TableHead class="text-xs font-semibold uppercase tracking-wider">Municipality</TableHead>
+                    <TableHead class="hidden sm:table-cell text-xs font-semibold uppercase tracking-wider">Metrics</TableHead>
+                    <TableHead class="text-right text-xs font-semibold uppercase tracking-wider pr-6">Score</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="(entry, i) in leaderboard" :key="entry.municipality"
+                    @click="focusMunicipality(entry.municipality)"
+                    class="cursor-pointer transition-colors hover:bg-muted/50 group">
+                    <TableCell class="font-mono text-center text-muted-foreground group-hover:text-foreground transition-colors text-sm">
+                      #{{ sortAsc ? i + 1 : leaderboard.length - i }}
+                    </TableCell>
+                    <TableCell class="font-semibold">
+                      {{ entry.municipality }}
+                    </TableCell>
+                    <TableCell class="hidden sm:table-cell">
+                      <div class="flex items-center gap-2 text-xs">
+                        <Badge variant="outline" class="font-mono text-[10px] py-0">
+                          SAIFI {{ entry.saifiCount?.toFixed(2) }}
+                        </Badge>
+                        <Badge variant="outline" class="font-mono text-[10px] py-0">
+                          SAIDI {{ entry.saidiHours?.toFixed(1) }}h
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell class="text-right pr-6">
+                      <div class="flex flex-col items-end gap-1.5 w-full max-w-[100px] ml-auto">
+                        <span class="text-xs font-bold font-mono" :class="
+                          entry.reliabilityScore >= 95 ? 'text-green-600 dark:text-green-400' :
+                          entry.reliabilityScore >= 90 ? 'text-amber-600 dark:text-amber-400' :
+                          'text-red-600 dark:text-red-400'
+                        ">
+                          {{ entry.reliabilityScore?.toFixed(1) }}%
+                        </span>
+                        <Progress :model-value="entry.reliabilityScore" class="h-1.5 w-full"
+                          :class="
+                            entry.reliabilityScore >= 95 ? '[&>div]:bg-green-500' :
+                            entry.reliabilityScore >= 90 ? '[&>div]:bg-amber-500' :
+                            '[&>div]:bg-red-500'
+                          " />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </ScrollArea>
-            <p v-else class="text-xs text-slate-500 text-center py-8">Calculating index benchmarks...</p>
+            
+            <div v-else class="flex items-center justify-center h-48 text-muted-foreground text-sm flex-col gap-3">
+              <Skeleton class="h-8 w-[90%] rounded-md" v-for="i in 4" :key="i" />
+            </div>
           </CardContent>
         </Card>
       </section>
@@ -456,43 +480,44 @@ onMounted(async () => {
 </template>
 
 <style>
-/* Leaflet map visual style overrides */
+/* Leaflet map visual style overrides for shadcn styling */
 .leaflet-container {
-  background: #f8fafc !important;
+  background: hsl(var(--muted)) !important;
+  font-family: inherit !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.1) !important;
 }
 
 .leaflet-popup-tip {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
+  background: hsl(var(--card)) !important;
+  border-top: 1px solid hsl(var(--border)) !important;
+  border-left: 1px solid hsl(var(--border)) !important;
 }
 
 .leaflet-popup-close-button {
-  color: #64748b !important;
+  color: hsl(var(--muted-foreground)) !important;
+  padding: 4px !important;
 }
 
-/* Custom scrollbar */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 5px;
+/* Base custom scrollbar for better native feel when ScrollArea isn't used */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-.scrollbar-thin::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
   border-radius: 10px;
 }
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
 }
 </style>
