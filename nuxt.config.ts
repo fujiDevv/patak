@@ -33,7 +33,7 @@ export default defineNuxtConfig({
       ]
     },
     workbox: {
-      navigateFallback: '/'
+      navigateFallback: null
     },
     devOptions: {
       enabled: true,
