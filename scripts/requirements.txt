@@ -1,0 +1,9 @@
+scrapling
+beautifulsoup4
+lxml
+requests
+python-dateutil
+spacy
+curl-cffi
+playwright
+browserforge
