@@ -14,82 +14,85 @@ export const useLibsql = () => {
   const rawExecute = client.execute.bind(client);
   const rawBatch = client.batch.bind(client);
 
-  if (url.startsWith('file:')) {
-    if (!initPromise) {
-      initPromise = (async () => {
-        try {
-          console.log('Initializing local SQLite database (local.db)...');
+  if (!initPromise) {
+    initPromise = (async () => {
+      try {
+        console.log(`Initializing database schema (${url.startsWith('file:') ? 'local' : 'remote'})...`);
+        await rawExecute(`
+          CREATE TABLE IF NOT EXISTS UtilityProvider (
+            id TEXT PRIMARY KEY,
+            slug TEXT UNIQUE,
+            name TEXT,
+            type TEXT,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        await rawExecute(`
+          CREATE TABLE IF NOT EXISTS OutageEvent (
+            id TEXT PRIMARY KEY,
+            providerSlug TEXT,
+            status TEXT,
+            rawText TEXT,
+            reasonCategory TEXT,
+            startTime INTEGER,
+            endTime INTEGER,
+            durationHours REAL,
+            region TEXT,
+            province TEXT,
+            municipality TEXT,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        await rawExecute(`
+          CREATE INDEX IF NOT EXISTS idx_outage_municipality_start ON OutageEvent (municipality, startTime);
+        `);
+
+        await rawExecute(`
+          CREATE TABLE IF NOT EXISTS OutageArea (
+            id TEXT PRIMARY KEY,
+            outageId TEXT,
+            barangay TEXT,
+            streetsRaw TEXT,
+            latitude REAL,
+            longitude REAL
+          );
+        `);
+
+        await rawExecute(`
+          CREATE INDEX IF NOT EXISTS idx_outage_area_barangay ON OutageArea (barangay);
+        `);
+
+        await rawExecute(`
+          CREATE TABLE IF NOT EXISTS MunicipalMetric (
+            id TEXT PRIMARY KEY,
+            municipality TEXT UNIQUE,
+            reliabilityScore REAL DEFAULT 100.0,
+            saifiCount REAL DEFAULT 0.0,
+            saidiHours REAL DEFAULT 0.0,
+            lastUpdated DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        const providers = await rawExecute('SELECT COUNT(*) as count FROM UtilityProvider');
+        const count = Number((providers.rows[0] as any).count);
+
+        if (count === 0) {
+          console.log('Seeding initial utility providers...');
+          
+          // Seed providers
           await rawExecute(`
-            CREATE TABLE IF NOT EXISTS UtilityProvider (
-              id TEXT PRIMARY KEY,
-              slug TEXT UNIQUE,
-              name TEXT,
-              type TEXT,
-              createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
+            INSERT INTO UtilityProvider (id, slug, name, type) VALUES 
+            ('p1', 'meralco', 'Meralco', 'POWER'),
+            ('p2', 'maynilad', 'Maynilad', 'WATER'),
+            ('p3', 'manila-water', 'Manila Water', 'WATER');
           `);
 
-          await rawExecute(`
-            CREATE TABLE IF NOT EXISTS OutageEvent (
-              id TEXT PRIMARY KEY,
-              providerSlug TEXT,
-              status TEXT,
-              rawText TEXT,
-              reasonCategory TEXT,
-              startTime INTEGER,
-              endTime INTEGER,
-              durationHours REAL,
-              region TEXT,
-              province TEXT,
-              municipality TEXT,
-              createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-          `);
-
-          await rawExecute(`
-            CREATE INDEX IF NOT EXISTS idx_outage_municipality_start ON OutageEvent (municipality, startTime);
-          `);
-
-          await rawExecute(`
-            CREATE TABLE IF NOT EXISTS OutageArea (
-              id TEXT PRIMARY KEY,
-              outageId TEXT,
-              barangay TEXT,
-              streetsRaw TEXT,
-              latitude REAL,
-              longitude REAL
-            );
-          `);
-
-          await rawExecute(`
-            CREATE INDEX IF NOT EXISTS idx_outage_area_barangay ON OutageArea (barangay);
-          `);
-
-          await rawExecute(`
-            CREATE TABLE IF NOT EXISTS MunicipalMetric (
-              id TEXT PRIMARY KEY,
-              municipality TEXT UNIQUE,
-              reliabilityScore REAL DEFAULT 100.0,
-              saifiCount REAL DEFAULT 0.0,
-              saidiHours REAL DEFAULT 0.0,
-              lastUpdated DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
-          `);
-
-          const providers = await rawExecute('SELECT COUNT(*) as count FROM UtilityProvider');
-          const count = Number((providers.rows[0] as any).count);
-
-          if (count === 0) {
-            console.log('Seeding initial mock data for Project Patak...');
+          // Only seed mock metrics and outages for local development database
+          if (url.startsWith('file:')) {
+            console.log('Seeding initial mock data for local development...');
             
-            // Seed providers
-            await rawExecute(`
-              INSERT INTO UtilityProvider (id, slug, name, type) VALUES 
-              ('p1', 'meralco', 'Meralco', 'POWER'),
-              ('p2', 'maynilad', 'Maynilad', 'WATER'),
-              ('p3', 'manila-water', 'Manila Water', 'WATER');
-            `);
-
             // Seed Municipal metrics
             await rawExecute(`
               INSERT INTO MunicipalMetric (id, municipality, reliabilityScore, saifiCount, saidiHours) VALUES 
@@ -165,14 +168,13 @@ export const useLibsql = () => {
               ('a3', 'o2', 'Addition Hills', 'Shaw Boulevard adjacent streets'),
               ('a4', 'o3', 'San Antonio', 'F. Ortigas Jr. Road, Sapphire Road');
             `);
-
-            console.log('Local database seeded successfully!');
           }
-        } catch (err) {
-          console.error('Error during auto-initialization:', err);
+          console.log('Database seeded successfully!');
         }
-      })();
-    }
+      } catch (err) {
+        console.error('Error during auto-initialization:', err);
+      }
+    })();
   }
 
   // Wrap execute and batch to await the initialization promise transparently
