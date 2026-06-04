@@ -33,6 +33,52 @@ const leaderboard = computed(() => {
   })
 })
 
+// Computed existing cities present in the dataset (outages or leaderboard)
+const existingCities = computed(() => {
+  const cities = new Set()
+  
+  if (rawLeaderboard.value) {
+    rawLeaderboard.value.forEach(item => {
+      if (item.municipality) cities.add(item.municipality.trim())
+    })
+  }
+  
+  if (rawOutages.value) {
+    rawOutages.value.forEach(item => {
+      if (item.municipality) {
+        item.municipality.split(',').forEach(m => {
+          const cleaned = m.trim()
+          if (cleaned) cities.add(cleaned)
+        })
+      }
+    })
+  }
+  
+  return Array.from(cities).sort()
+})
+
+// Utility function to group affected areas by barangay and deduplicate street names
+function groupAreasByBarangay(areas) {
+  if (!areas) return []
+  const grouped = {}
+  for (const area of areas) {
+    const b = area.barangay || 'Unknown'
+    if (!grouped[b]) {
+      grouped[b] = new Set()
+    }
+    if (area.streetsRaw && area.streetsRaw.trim()) {
+      area.streetsRaw.split(',').forEach(s => {
+        const cleaned = s.trim()
+        if (cleaned) grouped[b].add(cleaned)
+      })
+    }
+  }
+  return Object.entries(grouped).map(([barangay, streetsSet]) => ({
+    barangay,
+    streets: Array.from(streetsSet)
+  }))
+}
+
 function triggerSearch() {
   activeSearch.value = searchInput.value
 }
@@ -183,9 +229,13 @@ onMounted(async () => {
               v-model="searchInput"
               @keyup.enter="triggerSearch"
               type="text"
+              list="existing-cities"
               placeholder="Search city (e.g. Quezon City)..."
               class="bg-white border border-slate-200 text-sm focus:border-blue-900 focus:ring-blue-900/10 rounded-xl pl-10 pr-10 py-2.5 w-full transition focus:outline-none focus:ring-2 text-slate-900 placeholder-slate-400 shadow-sm"
             />
+            <datalist id="existing-cities">
+              <option v-for="city in existingCities" :key="city" :value="city" />
+            </datalist>
             <span class="absolute left-3.5 top-3.5 text-slate-400 text-xs">🔍</span>
             <button 
               v-if="activeSearch" 
@@ -241,6 +291,19 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Quick select city suggestion badges -->
+        <div v-if="existingCities.length" class="flex flex-wrap gap-1.5 items-center bg-white border border-slate-200 p-3 rounded-2xl shadow-sm">
+          <span class="text-[10px] uppercase font-bold text-slate-400 mr-1.5">Quick Select:</span>
+          <button
+            v-for="city in existingCities"
+            :key="city"
+            @click="searchInput = city; triggerSearch()"
+            class="text-xs px-2.5 py-1 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-900 border border-slate-200 hover:border-blue-200 rounded-lg transition duration-200 flex items-center gap-1"
+          >
+            📍 {{ city }}
+          </button>
+        </div>
+
         <div v-if="pending" class="py-24 text-center">
           <div class="w-8 h-8 border-4 border-blue-900/20 border-t-blue-900 rounded-full animate-spin mx-auto mb-4"></div>
           <p class="text-slate-500 text-xs tracking-wider animate-pulse">Loading outages database...</p>
@@ -259,12 +322,6 @@ onMounted(async () => {
             @click="focusMunicipality(item.municipality)"
             class="p-5 bg-white border border-slate-200 hover:border-blue-200 hover:bg-blue-50/10 rounded-xl cursor-pointer transition duration-300 relative overflow-hidden group shadow-sm hover:shadow-md"
           >
-            <!-- Provider specific color tag -->
-            <div 
-              :class="item.providerSlug === 'meralco' ? 'bg-blue-900' : 'bg-blue-500'"
-              class="absolute left-0 top-0 bottom-0 w-1"
-            ></div>
-
             <div class="flex justify-between items-center mb-3">
               <span 
                 class="text-[9px] font-mono tracking-wider font-extrabold px-2.5 py-0.5 rounded-md uppercase border bg-blue-100 text-blue-800 border-blue-200"
@@ -292,10 +349,19 @@ onMounted(async () => {
             </div>
 
             <!-- Detailed affected areas -->
-            <div v-if="item.affectedAreas && item.affectedAreas.length" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-2">
-              <div v-for="area in item.affectedAreas" :key="area.barangay" class="text-xs">
-                <span class="text-slate-800 font-medium">📍 Brgy. {{ area.barangay }}</span>
-                <p class="text-slate-500 text-[11px] leading-relaxed mt-0.5 pl-4">{{ area.streetsRaw }}</p>
+            <div v-if="item.affectedAreas && item.affectedAreas.length" class="mt-3 pt-3 border-t border-slate-100 flex flex-col gap-3">
+              <div v-for="group in groupAreasByBarangay(item.affectedAreas)" :key="group.barangay" class="text-xs bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                <span class="text-slate-800 font-bold flex items-center gap-1.5">
+                  <span class="text-blue-600">📍</span> Brgy. {{ group.barangay }}
+                </span>
+                <div v-if="group.streets.length" class="mt-1.5 pl-5 flex flex-col gap-1">
+                  <p v-for="street in group.streets" :key="street" class="text-slate-600 text-[11px] leading-relaxed relative before:content-['•'] before:absolute before:-left-3.5 before:text-slate-400">
+                    {{ street }}
+                  </p>
+                </div>
+                <div v-else class="mt-1 pl-5 text-[11px] text-slate-400 italic">
+                  All areas/streets affected
+                </div>
               </div>
             </div>
 

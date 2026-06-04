@@ -19,9 +19,31 @@ export default defineEventHandler(async (event) => {
 
   // Handle multi-municipality advisories (parser may return comma-joined string)
   const municipalities: string[] = p.municipality
-    .split(',')
-    .map((m: string) => m.trim())
-    .filter(Boolean);
+    ? p.municipality.split(',').map((m: string) => m.trim()).filter(Boolean)
+    : [];
+
+  const muniString = municipalities.join(', ');
+
+  // De-duplicate: Check if this outage event already exists
+  const existing = await client.execute({
+    sql: `SELECT id FROM OutageEvent 
+          WHERE providerSlug = ? 
+            AND startTime = ? 
+            AND endTime = ? 
+            AND municipality = ? 
+          LIMIT 1`,
+    args: [
+      body.providerSlug,
+      start.getTime(),
+      end.getTime(),
+      muniString,
+    ],
+  });
+
+  const firstRow = existing.rows[0];
+  if (firstRow) {
+    return { success: true, message: 'Duplicate skipped', registeredId: firstRow.id as string };
+  }
 
   try {
     await client.batch([
@@ -41,7 +63,7 @@ export default defineEventHandler(async (event) => {
           duration,
           p.region || 'NCR',
           p.province || 'Metro Manila',
-          municipalities.join(', '),
+          muniString,
         ],
       },
       ...p.affectedBreakdown.map((area: { barangay: string; streetsRaw: string }) => ({
