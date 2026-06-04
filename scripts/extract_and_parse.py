@@ -46,13 +46,13 @@ def strategy_scrapling() -> list[str]:
         cards = [el.get_all_text().strip() for el in page.css(".views-col") if el.get_all_text().strip()]
         if cards:
             log.info(f"Strategy 1 found {len(cards)} cards via primary selector.")
-            return cards[:5]
+            return cards
 
         # Fallback selector within Scrapling — broader grab
         cards = [el.get_all_text().strip() for el in page.css(".views-row, .advisory-item, .outage-notice, article.advisory") if el.get_all_text().strip()]
         if cards:
             log.info(f"Strategy 1 found {len(cards)} cards via fallback selector.")
-            return cards[:5]
+            return cards
 
         log.warning("Strategy 1: No advisory elements matched any selector.")
         return []
@@ -85,7 +85,7 @@ def strategy_bs4() -> list[str]:
                 texts = [t.get_text(separator="\n", strip=True) for t in tags if t.get_text(strip=True)]
                 if texts:
                     log.info(f"Strategy 2 found {len(texts)} items with {attrs}.")
-                    return texts[:5]
+                    return texts
 
         log.warning("Strategy 2: No known selectors matched.")
         return []
@@ -128,7 +128,7 @@ def strategy_text_fallback() -> list[str]:
 
         if candidates:
             log.info(f"Strategy 3 found {len(candidates)} candidate paragraphs.")
-            return candidates[:5]
+            return candidates
 
         log.warning("Strategy 3: No keyword-dense paragraphs found.")
         return []
@@ -184,11 +184,24 @@ STREETS_RE = re.compile(
 EMERGENCY_KEYWORDS = {"emergency", "typhoon", "storm", "fault", "damage", "unannounced", "forced"}
 MAINTENANCE_KEYWORDS = {"maintenance", "scheduled", "upgrade", "improvement", "installation", "inspection"}
 
-# Known municipality names in NCR — extend for other regions as needed
-NCR_MUNICIPALITIES = {
+# Known municipality names in NCR and surrounding provinces
+KNOWN_MUNICIPALITIES = {
+    # Metro Manila
     "quezon city", "manila", "makati", "pasig", "taguig", "mandaluyong",
     "san juan", "marikina", "pasay", "parañaque", "las piñas", "muntinlupa",
     "caloocan", "malabon", "navotas", "valenzuela", "pateros",
+    # Rizal
+    "antipolo", "cainta", "taytay", "san mateo", "rodriguez", "binangonan", "angono", "rizal",
+    # Cavite
+    "bacoor", "imus", "dasmariñas", "general trias", "cavite", "trece martires", "silang", "carmona",
+    # Laguna
+    "san pedro", "biñan", "santa rosa", "calamba", "cabuyao", "los baños", "laguna",
+    # Bulacan
+    "san jose del monte", "meycauayan", "marilao", "bocaue", "santa maria", "malolos", "bulacan",
+    # Batangas
+    "batangas", "batangas city", "lipa", "tanauan", "santo tomas",
+    # Pampanga & Quezon
+    "pampanga", "angeles", "san fernando", "lucena", "quezon",
 }
 
 
@@ -259,11 +272,11 @@ def extract_dates_multiple(text: str) -> list[tuple[datetime, datetime]]:
 
 def extract_municipality(text: str) -> str:
     """
-    Match against NCR municipality list first (fast, deterministic).
+    Match against known municipality list first (fast, deterministic).
     Falls back to regex-based City name extraction, then to spaCy GPE entities.
     """
     lower = text.lower()
-    matched = [m for m in NCR_MUNICIPALITIES if m in lower]
+    matched = [m for m in KNOWN_MUNICIPALITIES if m in lower]
     if matched:
         # Return longest match to resolve "Manila" vs "Mandaluyong" ambiguity
         return max(matched, key=len).title()

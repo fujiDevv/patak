@@ -108,6 +108,7 @@ let map = null
 let markersGroup = null
 
 const MUNICIPALITY_COORDS = {
+  // Metro Manila
   'Quezon City': [14.6760, 121.0437],
   'Manila': [14.5995, 120.9842],
   'Pasig': [14.5764, 121.0851],
@@ -123,7 +124,53 @@ const MUNICIPALITY_COORDS = {
   'Malabon': [14.6536, 120.9392],
   'Navotas': [14.6349, 120.9472],
   'San Juan': [14.6019, 121.0355],
-  'Pateros': [14.5454, 121.0689]
+  'Pateros': [14.5454, 121.0689],
+  // Rizal
+  'Antipolo': [14.5842, 121.1763],
+  'Cainta': [14.5826, 121.1158],
+  'Taytay': [14.5684, 121.1354],
+  'San Mateo': [14.6987, 121.1182],
+  'Rodriguez': [14.7333, 121.1500],
+  'Binangonan': [14.4841, 121.1896],
+  'Angono': [14.5298, 121.1541],
+  'Rizal': [14.5842, 121.1763],
+  // Cavite
+  'Bacoor': [14.4146, 120.9427],
+  'Imus': [14.4088, 120.9348],
+  'Dasmariñas': [14.3294, 120.9367],
+  'General Trias': [14.3852, 120.8807],
+  'Cavite': [14.2456, 120.9367],
+  'Trece Martires': [14.2818, 120.8679],
+  'Silang': [14.2255, 120.9760],
+  'Carmona': [14.3069, 121.0336],
+  // Laguna
+  'San Pedro': [14.3562, 121.0573],
+  'Biñan': [14.3315, 121.0827],
+  'Santa Rosa': [14.3129, 121.1114],
+  'Calamba': [14.2146, 121.1627],
+  'Cabuyao': [14.2750, 121.1246],
+  'Los Baños': [14.1703, 121.2435],
+  'Laguna': [14.2750, 121.3653],
+  // Bulacan
+  'San Jose del Monte': [14.8142, 121.0456],
+  'Meycauayan': [14.7381, 120.9614],
+  'Marilao': [14.7570, 120.9455],
+  'Bocaue': [14.7958, 120.9276],
+  'Santa Maria': [14.8211, 120.9576],
+  'Malolos': [14.8437, 120.8113],
+  'Bulacan': [14.7937, 120.8787],
+  // Batangas
+  'Batangas': [13.7565, 121.0583],
+  'Batangas City': [13.7565, 121.0583],
+  'Lipa': [13.9419, 121.1644],
+  'Tanauan': [14.0847, 121.1504],
+  'Santo Tomas': [14.1083, 121.1444],
+  // Pampanga & Others
+  'Pampanga': [15.0441, 120.6750],
+  'Angeles': [15.1451, 120.5887],
+  'San Fernando': [15.0298, 120.6806],
+  'Lucena': [13.9314, 121.6173],
+  'Quezon': [13.9314, 121.6173]
 }
 
 useHead({
