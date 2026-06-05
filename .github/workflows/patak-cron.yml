@@ -8,6 +8,9 @@ on:
     - cron: '*/30 * * * *'   # Fires every 30 minutes, free tier
   workflow_dispatch:           # Manual trigger from Actions dashboard
 
+permissions:
+  contents: read
+
 jobs:
   run_pipeline:
     runs-on: ubuntu-latest
